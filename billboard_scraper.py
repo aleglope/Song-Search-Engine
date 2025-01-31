@@ -1,25 +1,27 @@
 import requests
 from bs4 import BeautifulSoup
 
+
 def fetch_songs_from_billboard(date):
     """
-    Fetch the list of top 100 songs from the Billboard Hot 100 chart for a given date.
+    Fetches the list of top 100 songs from the Billboard Hot 100 chart for a given date.
 
     Parameters:
         date (str): The date in YYYY-MM-DD format to fetch the songs for.
 
     Returns:
-        list of str: A list of strings, each containing "song title by artist", or an empty list if an error occurs.
+        list of str: A list of strings, each containing "song title by artist",
+        or an empty list if an error occurs.
     """
 
-    # Construir la URL para la lista de Billboard Hot 100 basada en la fecha proporcionada
+    # Build the URL for the Billboard Hot 100 list based on the provided date
     url = f"https://www.billboard.com/charts/hot-100/{date}"
     print(f"Fetching data from: {url}")
 
-    # Intentar realizar la solicitud HTTP con un tiempo de espera de 10 segundos
+    # Attempt to make the HTTP request with a timeout of 10 seconds
     try:
         response = requests.get(url, timeout=10)
-        response.raise_for_status()  # Asegurar que se recibe una respuesta exitosa
+        response.raise_for_status()  # Ensure a successful response is received
     except requests.exceptions.Timeout:
         print("The request timed out. Please try again or check your connection.")
         return []
@@ -30,19 +32,18 @@ def fetch_songs_from_billboard(date):
         print(f"An error occurred during the request: {e}")
         return []
 
-
-    # Usar BeautifulSoup para analizar el contenido de la página
+    # Use BeautifulSoup to parse the page content
     web_page = response.text
     soup = BeautifulSoup(web_page, "html.parser")
 
-    # Inicializar listas para almacenar los títulos de las canciones y los artistas
+    # Initialize lists to store song titles and artists
     songs = []
     artists = []
 
-    # Encontrar todos los elementos que contienen los datos de las canciones
+    # Find all elements that contain the song data
     tag = soup.find_all(name="li", class_="lrv-u-width-100p")
 
-    # Procesar cada entrada de canción y artista
+    # Process each song and artist entry
     for i in tag:
         t = i.find_all(name="ul")
         for j in t:
@@ -57,9 +58,9 @@ def fetch_songs_from_billboard(date):
                     t5 = m.get_text()
                     artists.append(str(t5).strip("\n\t"))
 
-    # Asumir que cada 16 elementos en la lista de artistas corresponde al artista de la canción
+    # Assume every 16th element in the artists list corresponds to the song's artist
     artists = artists[::16]
 
-    # Combinar canciones y artistas en una lista de strings
+    # Combine songs and artists into a list of strings
     combined_song_artist = [f"{songs[i]} by {artists[i]}" for i in range(len(songs))]
     return combined_song_artist
